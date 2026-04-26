@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADHD Daily Planner</title>
+
+<!-- PWA / Add to Home Screen -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ADHD Planner">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#7A9E7E">
+
+<!-- Inline manifest for PWA install -->
+<link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;ADHD Daily Planner&quot;,&quot;short_name&quot;:&quot;ADHD Planner&quot;,&quot;description&quot;:&quot;ADHD-friendly daily planner&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%23F5F0E8&quot;,&quot;theme_color&quot;:&quot;%237A9E7E&quot;,&quot;icons&quot;:[{&quot;src&quot;:&quot;data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237A9E7E'/><text y='.85em' font-size='70' x='15'>🧠</text></svg>&quot;,&quot;sizes&quot;:&quot;any&quot;,&quot;type&quot;:&quot;image/svg+xml&quot;}]}">
+
+<!-- Inline SVG favicon as data URI so it works offline -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237A9E7E'/><text y='.85em' font-size='70' x='15'>🧠</text></svg>">
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --beige: #F5F0E8;
+    --beige-dark: #EDE7D9;
+    --sage: #7A9E7E;
+    --sage-light: #A8C5A0;
+    --sage-dark: #5A7E5E;
+    --blue: #8FAFC5;
+    --blue-light: #C2D8E8;
+    --warm-brown: #8B7355;
+    --text: #3A3530;
+    --text-light: #7A7168;
+    --border: #D8CFC0;
+    --white: #FDFBF7;
+    --accent: #D4956A;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--beige);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 56px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .nav-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px; color: var(--sage-dark);
+    letter-spacing: 0.02em;
+  }
+
+  .nav-tabs {
+    display: flex; gap: 4px; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+
+  .tab-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 6px 14px; border-radius: 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: var(--text-light); transition: all .2s;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { background: var(--beige); color: var(--text); }
+  .tab-btn.active { background: var(--sage); color: white; }
+
+  .nav-day {
+    font-size: 13px; color: var(--text-light); font-weight: 500;
+    white-space: nowrap;
+  }
+
+  /* ── LAYOUT ── */
+  main {
+    margin-top: 56px;
+    padding: 32px 24px;
+    max-width: 960px;
+    margin-left: auto; margin-right: auto;
+  }
+
+  .section { display: none; animation: fadeIn .3s ease; }
+  .section.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── CARDS & TILES ── */
+  .card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .card-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 640px) {
+    .card-grid, .card-grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px; color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .section-sub {
+    font-size: 14px; color: var(--text-light);
+    margin-bottom: 28px; line-height: 1.5;
+  }
+
+  .card-title {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--text-light); margin-bottom: 14px;
+  }
+
+  .card-label {
+    font-size: 13px; color: var(--text-light);
+    margin-bottom: 8px; font-style: italic;
+  }
+
+  /* ── INPUTS ── */
+  textarea, input[type=text] {
+    width: 100%;
+    background: var(--beige);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--text);
+    resize: vertical; transition: border-color .2s;
+    outline: none;
+  }
+  textarea:focus, input[type=text]:focus {
+    border-color: var(--sage);
+    background: var(--white);
+  }
+  textarea.big { min-height: 120px; }
+  textarea.huge { min-height: 180px; }
+
+  /* ── PRIORITY TASKS ── */
+  .priority-box {
+    background: linear-gradient(135deg, var(--sage-light)20, var(--beige));
+    border: 2px solid var(--sage-light);
+    border-radius: 14px; padding: 20px;
+    margin-bottom: 20px;
+  }
+
+  .priority-label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--sage-dark); margin-bottom: 4px;
+  }
+
+  .priority-sub {
+    font-size: 12px; color: var(--sage-dark);
+    font-style: italic; margin-bottom: 16px; opacity: 0.8;
+  }
+
+  .priority-item {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .priority-num {
+    width: 28px; height: 28px;
+    background: var(--sage); color: white;
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* ── CHECKLIST ── */
+  .checklist-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 0; border-bottom: 1px solid var(--beige-dark);
+  }
+  .checklist-item:last-child { border-bottom: none; }
+
+  .check-box {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 6px; cursor: pointer;
+    flex-shrink: 0; display: flex; align-items: center;
+    justify-content: center; transition: all .2s;
+    background: transparent;
+  }
+  .check-box.checked {
+    background: var(--sage); border-color: var(--sage);
+  }
+  .check-box.checked::after {
+    content: '✓'; color: white; font-size: 12px; font-weight: 700;
+  }
+  .check-text {
+    flex: 1; font-size: 14px;
+    transition: all .2s; outline: none; border: none;
+    background: transparent; font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+  }
+  .check-text.done { text-decoration: line-through; color: var(--text-light); }
+
+  /* ── TIME BLOCKS ── */
+  .time-block {
+    border-left: 3px solid var(--sage-light);
+    padding: 10px 14px; margin-bottom: 12px;
+    border-radius: 0 10px 10px 0;
+    background: var(--beige);
+  }
+  .time-label {
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--sage-dark); margin-bottom: 6px;
+  }
+
+  /* ── EMOJI TRACKER ── */
+  .emoji-row {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .emoji-btn {
+    background: var(--beige); border: 2px solid var(--border);
+    border-radius: 10px; padding: 8px 12px;
+    cursor: pointer; font-size: 18px;
+    transition: all .2s; user-select: none;
+  }
+  .emoji-btn:hover { transform: scale(1.1); border-color: var(--sage-light); }
+  .emoji-btn.selected { border-color: var(--sage); background: var(--sage-light)30; }
+
+  /* ── SCALE TRACKER ── */
+  .scale-row {
+    display: flex; gap: 8px; margin-top: 8px;
+  }
+  .scale-btn {
+    flex: 1; padding: 10px 4px;
+    border: 2px solid var(--border);
+    border-radius: 10px; background: var(--beige);
+    cursor: pointer; font-size: 13px; font-weight: 600;
+    color: var(--text-light); transition: all .2s; text-align: center;
+  }
+  .scale-btn:hover { border-color: var(--sage-light); }
+  .scale-btn.selected { background: var(--sage); border-color: var(--sage); color: white; }
+
+  /* ── RESET REMINDER ── */
+  .reset-box {
+    background: var(--blue-light)50;
+    border: 1.5px solid var(--blue);
+    border-radius: 14px; padding: 18px;
+  }
+  .reset-chips {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+  }
+  .reset-chip {
+    padding: 6px 14px; border-radius: 20px;
+    background: var(--white); border: 1.5px solid var(--blue);
+    font-size: 13px; color: var(--blue);
+    cursor: pointer; transition: all .2s;
+  }
+  .reset-chip:hover, .reset-chip.active {
+    background: var(--blue); color: white;
+  }
+
+  /* ── AFFIRMATION BANNER ── */
+  .affirm-banner {
+    background: linear-gradient(135deg, var(--sage)15, var(--blue-light)30);
+    border: 1.5px solid var(--sage-light);
+    border-radius: 14px; padding: 20px;
+    margin-bottom: 24px; text-align: center;
+  }
+  .affirm-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px; color: var(--sage-dark);
+    line-height: 1.4;
+  }
+
+  /* ── RULES PILLS ── */
+  .rules-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .rule-pill {
+    background: var(--beige);
+    border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 12px 16px;
+    font-size: 14px; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .rule-icon { font-size: 18px; }
+
+  /* ── WEEKLY GRID ── */
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .day-col { background: var(--beige); border-radius: 10px; padding: 10px 6px; }
+  .day-name {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-light);
+    text-align: center; margin-bottom: 8px;
+  }
+  .day-col textarea { min-height: 80px; font-size: 12px; }
+
+  /* ── HABIT TRACKER ── */
+  .habit-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--beige-dark);
+  }
+  .habit-name { flex: 1; font-size: 14px; }
+  .habit-dots { display: flex; gap: 6px; }
+  .habit-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid var(--border); background: var(--beige);
+    cursor: pointer; transition: all .2s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: transparent;
+  }
+  .habit-dot.done { background: var(--sage); border-color: var(--sage); color: white; }
+
+  /* ── MONTHLY CALENDAR ── */
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+  }
+  .cal-day-name {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    color: var(--text-light); text-align: center; padding: 6px 0;
+  }
+  .cal-cell {
+    min-height: 52px; background: var(--beige);
+    border-radius: 8px; padding: 6px;
+    border: 1.5px solid transparent;
+    cursor: pointer; transition: all .2s;
+    position: relative;
+  }
+  .cal-cell:hover { border-color: var(--sage-light); }
+  .cal-cell.today { border-color: var(--sage); background: var(--sage-light)20; }
+  .cal-num { font-size: 12px; font-weight: 600; color: var(--text-light); }
+  .cal-cell.today .cal-num { color: var(--sage-dark); }
+  .cal-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-top: 4px; }
+
+  /* ── TASK BREAKDOWN ── */
+  .breakdown-step {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--beige-dark);
+  }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid var(--sage-light); color: var(--sage-dark);
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── LOW / HIGH ENERGY ── */
+  .energy-tag {
+    display: inline-block; padding: 4px 12px;
+    border-radius: 20px; font-size: 12px; font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .energy-low { background: var(--blue-light); color: #4A7090; }
+  .energy-high { background: #FFE8D0; color: var(--accent); }
+
+  /* ── COVER ── */
+  .cover-hero {
+    text-align: center;
+    padding: 60px 24px 40px;
+  }
+  .cover-emoji { font-size: 64px; margin-bottom: 20px; }
+  .cover-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 44px; color: var(--text);
+    margin-bottom: 10px; line-height: 1.2;
+  }
+  .cover-subtitle {
+    font-size: 16px; color: var(--text-light);
+    margin-bottom: 40px; max-width: 400px; margin-left: auto; margin-right: auto;
+  }
+  .cover-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+    max-width: 600px; margin: 0 auto 40px;
+  }
+  .cover-feat {
+    background: var(--white); border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 18px 14px; text-align: center;
+  }
+  .cover-feat-icon { font-size: 24px; margin-bottom: 8px; }
+  .cover-feat-text { font-size: 13px; color: var(--text-light); line-height: 1.4; }
+
+  .start-btn {
+    background: var(--sage); color: white;
+    border: none; border-radius: 50px; padding: 14px 40px;
+    font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: all .2s; box-shadow: 0 4px 20px rgba(122,158,126,.35);
+  }
+  .start-btn:hover { background: var(--sage-dark); transform: translateY(-2px); }
+
+  /* ── MISC ── */
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .badge {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+    background: var(--sage-light)30; color: var(--sage-dark);
+    margin-bottom: 14px;
+  }
+
+  .print-btn {
+    background: none; border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 8px 16px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    color: var(--text-light); cursor: pointer; transition: all .2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .print-btn:hover { border-color: var(--sage); color: var(--sage); }
+
+  @media print {
+    /* Hide all interactive/web elements */
+    nav, .start-btn, .print-btn, #a2hs-banner,
+    .dopa-add-btn, #add-task-btn, #add-monthly-goal-btn,
+    #add-deep-task-btn, #add-breakdown-btn,
+    #pdf-cta { display: none !important; }
+
+    /* Show the PDF navigation index */
+    #pdf-index { display: block !important; }
+
+    /* Page setup — landscape tablet (11x8.5in) */
+    @page {
+      size: 11in 8.5in landscape;
+      margin: 0.5in;
+    }
+
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+    body {
+      background: white !important;
+      font-size: 11pt;
+    }
+
+    main { margin-top: 0 !important; padding: 0 !important; }
+
+    /* Every section = its own page */
+    .section {
+      display: block !important;
+      width: 100% !important;
+      min-height: auto !important;
+      page-break-before: always;
+      break-before: page;
+      page-break-after: always;
+      break-after: page;
+      padding: 24pt !important;
+      box-sizing: border-box;
+    }
+
+    /* Cover page — no break before */
+    #cover {
+      page-break-before: avoid !important;
+      break-before: avoid !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      min-height: 7in;
+    }
+
+    /* Keep cards from splitting across pages */
+    .card, .dump-col, .big-priority-item,
+    .forgive-step, .dopamine-item { page-break-inside: avoid; break-inside: avoid; }
+
+    /* Grid layouts — stack on print */
+    .card-grid, .card-grid-3 {
+      display: block !important;
+    }
+    .card-grid .card, .card-grid-3 .dump-col {
+      margin-bottom: 12pt;
+      break-inside: avoid;
+    }
+
+    /* Make inputs look like writable fields */
+    input[type=text], textarea {
+      border: none !important;
+      border-bottom: 1.5px solid #BBBBBB !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      padding: 4pt 2pt !important;
+      font-size: 10pt;
+      resize: none;
+    }
+
+    textarea { border: 1.5px solid #CCCCCC !important; border-radius: 4pt !important; padding: 6pt !important; }
+
+    /* Hyperlink navigation — make tab buttons into PDF links */
+    .tab-btn { display: none !important; }
+
+    /* Print section titles with page labels */
+    .section-title { font-size: 20pt !important; margin-bottom: 6pt !important; }
+    .section-sub { font-size: 10pt !important; margin-bottom: 12pt !important; }
+
+    /* Remove shadows and heavy borders */
+    .card { box-shadow: none !important; border: 1.5px solid #DDDDDD !important; }
+
+    /* Habit dots — make them print as circles */
+    .habit-dot {
+      width: 20pt !important; height: 20pt !important;
+      border: 1.5px solid #AAAAAA !important;
+      background: white !important;
+    }
+    .check-box {
+      border: 1.5px solid #AAAAAA !important;
+      background: white !important;
+    }
+
+    /* Timer — hide */
+    .timer-circle, #timer-display, #timer-start, #timer-reset-btn { display: none !important; }
+
+    /* Scale buttons — print as small boxes */
+    .scale-btn {
+      border: 1.5px solid #AAAAAA !important;
+      background: white !important;
+      box-shadow: none !important;
+    }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+  /* ── BRAIN DUMP CATEGORIES ── */
+  .dump-col {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex; flex-direction: column;
+  }
+  .dump-col-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 6px;
+  }
+  .dump-col-icon { font-size: 22px; }
+  .dump-col-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px; color: var(--text);
+  }
+  .dump-col-sub {
+    font-size: 12px; color: var(--text-light);
+    font-style: italic; margin-bottom: 14px;
+  }
+  .dump-col textarea { flex: 1; min-height: 160px; }
+
+  .dump-must { border-top: 4px solid var(--accent); }
+  .dump-should { border-top: 4px solid var(--sage); }
+  .dump-shiny { border-top: 4px solid var(--blue); }
+
+  /* ── TOP 3 PRIORITY ── */
+  .big-priority-item {
+    display: flex; align-items: flex-start; gap: 16px;
+    margin-bottom: 20px;
+  }
+  .big-priority-num {
+    width: 48px; height: 48px; flex-shrink: 0;
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 20px; font-weight: 700;
+    color: white;
+  }
+  .bpn-1 { background: var(--accent); box-shadow: 0 4px 16px rgba(212,149,106,.4); }
+  .bpn-2 { background: var(--sage); box-shadow: 0 4px 16px rgba(122,158,126,.35); }
+  .bpn-3 { background: var(--blue); box-shadow: 0 4px 16px rgba(143,175,197,.4); }
+  .big-priority-inner { flex: 1; }
+  .big-priority-inner input {
+    font-size: 16px; font-weight: 500;
+    border-color: var(--border);
+    margin-bottom: 8px;
+  }
+  .big-priority-inner textarea { min-height: 60px; }
+
+  .win-banner {
+    background: linear-gradient(135deg, #FFF5EE, #FFE8D0);
+    border: 2px solid var(--accent);
+    border-radius: 16px; padding: 22px 24px;
+    margin-bottom: 20px; text-align: center;
+  }
+  .win-banner-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px; color: var(--accent); margin-bottom: 6px;
+  }
+  .win-banner-sub { font-size: 14px; color: var(--text-light); }
+
+  /* ── RESET BUTTON PAGE ── */
+  .reset-hero {
+    text-align: center; padding: 40px 24px 32px;
+    background: linear-gradient(135deg, #EEF6EF, #E8F2F8, #FFF5EE);
+    border-radius: 20px; margin-bottom: 24px;
+    border: 2px solid var(--sage-light);
+  }
+  .reset-hero-emoji { font-size: 56px; margin-bottom: 16px; }
+  .reset-hero-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 34px; color: var(--text); margin-bottom: 10px;
+    line-height: 1.2;
+  }
+  .reset-hero-sub {
+    font-size: 15px; color: var(--text-light);
+    max-width: 420px; margin: 0 auto; line-height: 1.6;
+  }
+
+  .forgive-step {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 16px 0; border-bottom: 1px solid var(--beige-dark);
+  }
+  .forgive-step:last-child { border-bottom: none; }
+  .forgive-icon {
+    font-size: 28px; line-height: 1; flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .forgive-text { flex: 1; }
+  .forgive-text strong { font-size: 15px; display: block; margin-bottom: 4px; }
+  .forgive-text p { font-size: 13px; color: var(--text-light); line-height: 1.5; }
+
+  .days-gone-row {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+  }
+  .days-gone-btn {
+    padding: 8px 18px; border-radius: 20px;
+    border: 2px solid var(--border); background: var(--white);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    color: var(--text-light); transition: all .2s;
+  }
+  .days-gone-btn:hover, .days-gone-btn.active {
+    border-color: var(--sage); background: var(--sage); color: white;
+  }
+
+  .comeback-card {
+    background: linear-gradient(135deg, var(--sage-light)20, var(--beige));
+    border: 2px solid var(--sage-light);
+    border-radius: 16px; padding: 24px;
+    margin-bottom: 20px;
+  }
+  .comeback-msg {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px; color: var(--sage-dark);
+    line-height: 1.5; margin-bottom: 16px;
+  }
+
+  /* ── DOPAMINE MENU ── */
+  .dopamine-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 7px 0; border-bottom: 1px solid var(--beige-dark);
+  }
+  .dopamine-item:last-child { border-bottom: none; }
+  .dopa-add-btn {
+    background: none; border: 1.5px dashed var(--border);
+    border-radius: 8px; padding: 8px 14px;
+    font-family: 'DM Sans', sans-serif; font-size: 13px;
+    color: var(--text-light); cursor: pointer; width: 100%;
+    margin-top: 10px; transition: all .2s;
+  }
+  .dopa-add-btn:hover { border-color: var(--sage); color: var(--sage); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">✦ ADHD Planner</div>
+  <div class="nav-tabs">
+    <button class="tab-btn active" data-section="cover">Home</button>
+    <button class="tab-btn" data-section="daily">Daily</button>
+    <button class="tab-btn" data-section="weekly">Weekly</button>
+    <button class="tab-btn" data-section="monthly">Monthly</button>
+    <button class="tab-btn" data-section="lowenergy">Low Energy</button>
+    <button class="tab-btn" data-section="highenergy">High Energy</button>
+    <button class="tab-btn" data-section="braindump">Brain Dump</button>
+    <button class="tab-btn" data-section="top3">Top 3</button>
+    <button class="tab-btn" data-section="reset">Reset Button</button>
+    <button class="tab-btn" data-section="dopamine">Dopamine Menu</button>
+    <button class="tab-btn" data-section="breakdown">Task Help</button>
+    <button class="tab-btn" data-section="routines">Routines</button>
+  </div>
+  <div class="nav-day" id="current-date"></div>
+</nav>
+
+<!-- ADD TO HOME SCREEN BANNER -->
+<div id="a2hs-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;">
+
+  <!-- Dark overlay -->
+  <div id="a2hs-overlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:198;"></div>
+
+  <!-- Arrow pointing to share button at bottom of Safari -->
+  <div style="position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:201;text-align:center;pointer-events:none;">
+    <div style="color:white;font-size:14px;font-weight:600;margin-bottom:8px;text-shadow:0 1px 4px rgba(0,0,0,0.5);">Tap this button in Safari</div>
+    <div style="font-size:48px;animation:bounceDown 1s infinite;">⬇️</div>
+  </div>
+
+  <!-- Instruction card -->
+  <div style="position:relative;z-index:202;background:white;border-radius:20px 20px 0 0;padding:24px 20px 40px;box-shadow:0 -4px 30px rgba(0,0,0,0.2);">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:40px;margin-bottom:8px;">🧠</div>
+      <div style="font-family:'DM Serif Display',serif;font-size:22px;color:#3A3530;margin-bottom:6px;">Add to Home Screen</div>
+      <div style="font-size:14px;color:#7A7168;">Install your ADHD Planner as an app</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:14px;background:#F5F0E8;border-radius:12px;padding:12px 16px;">
+        <div style="width:32px;height:32px;background:#7A9E7E;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;flex-shrink:0;">1</div>
+        <div>
+          <div style="font-weight:600;font-size:14px;color:#3A3530;">Tap the Share button</div>
+          <div style="font-size:12px;color:#7A7168;">The <strong>⬆ box-with-arrow</strong> icon at the bottom of your Safari screen</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;background:#F5F0E8;border-radius:12px;padding:12px 16px;">
+        <div style="width:32px;height:32px;background:#7A9E7E;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;flex-shrink:0;">2</div>
+        <div>
+          <div style="font-weight:600;font-size:14px;color:#3A3530;">Scroll down in the menu</div>
+          <div style="font-size:12px;color:#7A7168;">Look for <strong>"Add to Home Screen"</strong></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;background:#F5F0E8;border-radius:12px;padding:12px 16px;">
+        <div style="width:32px;height:32px;background:#7A9E7E;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;flex-shrink:0;">3</div>
+        <div>
+          <div style="font-weight:600;font-size:14px;color:#3A3530;">Tap Add</div>
+          <div style="font-size:12px;color:#7A7168;">Your planner appears on your home screen like an app 🎉</div>
+        </div>
+      </div>
+    </div>
+
+    <button id="a2hs-dismiss-btn" style="width:100%;background:none;border:2px solid #D8CFC0;border-radius:12px;padding:12px;font-size:14px;color:#7A7168;cursor:pointer;font-family:'DM Sans',sans-serif;">I'll do it later</button>
+  </div>
+</div>
+
+<style>
+@keyframes bounceDown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(10px); }
+}
+</style>
+
+<main>
+
+<!-- ══════════════════════════════════════════ COVER ═══ -->
+<div id="cover" class="section active">
+  <div class="cover-hero">
+    <div class="cover-emoji">🧠</div>
+    <h1 class="cover-title">ADHD Daily Planner</h1>
+    <p class="cover-subtitle">Designed for focus, flexibility, and real life — not perfection</p>
+    <div class="cover-grid">
+      <div class="cover-feat"><div class="cover-feat-icon">✅</div><div class="cover-feat-text">Done is better than perfect</div></div>
+      <div class="cover-feat"><div class="cover-feat-icon">🔄</div><div class="cover-feat-text">You can restart anytime</div></div>
+      <div class="cover-feat"><div class="cover-feat-icon">💚</div><div class="cover-feat-text">Small steps count</div></div>
+      <div class="cover-feat"><div class="cover-feat-icon">🎯</div><div class="cover-feat-text">Pick 1–3 priorities only</div></div>
+      <div class="cover-feat"><div class="cover-feat-icon">⚡</div><div class="cover-feat-text">Use it in any order</div></div>
+      <div class="cover-feat"><div class="cover-feat-icon">🚫</div><div class="cover-feat-text">Missed days don't matter</div></div>
+    </div>
+    <button class="start-btn" data-section="daily">Start Today's Planner →</button>
+  </div>
+
+  <!-- PDF NAVIGATION INDEX — visible in PDF, hidden on screen -->
+  <div id="pdf-index" style="display:none;">
+    <div style="font-family:'DM Serif Display',serif;font-size:18pt;color:#3A3530;margin-bottom:16pt;border-bottom:2px solid #D4956A;padding-bottom:8pt;">📋 Contents — tap any page to jump there</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10pt;">
+      <a href="#daily" style="display:flex;align-items:center;gap:10pt;padding:10pt 14pt;background:#F5F0E8;border-radius:8pt;text-decoration:none;color:#3A3530;border:1.5px solid #D8CFC0;">
+        <span style="font-size:20pt;">📅</span><span style="font-weight:600;">Daily Planner</span>
+      </a>
+      <a href="#weekly" style="display:flex;align-items:center;gap:10pt;padding:10pt 14pt;background:#F5F0E8;border-radius:8pt;text-decoration:none;color:#3A3530;border:1.5px solid #D8CFC0;">
+        <span style="font-size:20pt;">📆</span><span style="font-weight:600;">Weekly View</span>
+      </a>
+      <a href="#monthly" style="display:flex;align-items:center;gap:10pt;padding:10pt 14pt;background:#F5F0E8;border-radius:8pt;text-decoration:none;color:#3A3530;border:1.5px solid #D8CFC0;">
+        <span style="font-size:20pt;">🗓️</span><span style="font-weight:600;">Monthly Calendar</span>
+      </a>
+      <a href="#braindump" style="display:flex;align-items:center;gap:10pt;padding:10pt 14pt;background:#F5F0E8;border-radius:8pt;text-decoration:none;color:#3A3530;border:1.5px solid #D8CFC0;">
+        <span style="font-size:20pt;">🧠</span><span style="font-weight:600;">Brain Dump</span>
+      </a>
+      <a href="#top3" style="display:flex;align-items:center;gap:10pt;padding:10pt 14pt;background:#F5F0E8;border-radius:8pt;text-decoration:none;color:#3A3530;border:1.5px solid #D8CFC0;">
+        <span style="font-size:20pt;">🎯</span><span style="font-weight:600;">Top 3 Priorities</span>
+      </a>
+      <a href="#reset" style="display:flex;align-items:center;gap:10pt;padding:10pt 14pt;background:#F5F0E8;border-radius:8pt;text-decoration:none;color:#3A3530;border:1.5px solid #D8CFC0;">
+        <span style="font-size:20pt;">🔄</span><span style="font-weight:600;">Reset Button</span>
+      </a>
+      <a href="#dopamine" style="display:flex;align-items:center;gap:10pt;padding:10pt 14pt;background:#F5F0E8;border-radius:8pt;text-decoration:none;color:#3A3530;border:1.5px solid #D8CFC0;">
+        <span style="font-size:20pt;">🍽️</span><span style="font-weight:600;">Dopamine Menu</span>
+      </a>
+      <a href="#lowenergy" style="display:flex;align-items:center;gap:10pt;padding:10pt 14pt;background:#F5F0E8;border-radius:8pt;text-decoration:none;color:#3A3530;border:1.5px solid #D8CFC0;">
+        <span style="font-size:20pt;">🌿</span><span style="font-weight:600;">Low Energy Days</span>
+      </a>
+      <a href="#breakdown" style="display:flex;align-items:center;gap:10pt;padding:10pt 14pt;background:#F5F0E8;border-radius:8pt;text-decoration:none;color:#3A3530;border:1.5px solid #D8CFC0;">
+        <span style="font-size:20pt;">🔧</span><span style="font-weight:600;">Task Help</span>
+      </a>
+      <a href="#routines" style="display:flex;align-items:center;gap:10pt;padding:10pt 14pt;background:#F5F0E8;border-radius:8pt;text-decoration:none;color:#3A3530;border:1.5px solid #D8CFC0;">
+        <span style="font-size:20pt;">🌙</span><span style="font-weight:600;">Routines</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- SAVE AS PDF BUTTON — screen only -->
+  <div id="pdf-cta" style="margin-top:24px;padding:20px;background:linear-gradient(135deg,#EEF6EF,#F5F0E8);border:2px solid #A8C5A0;border-radius:16px;text-align:center;">
+    <div style="font-size:14px;color:#5A7E5E;font-weight:600;margin-bottom:4px;">💾 Want this as a PDF for GoodNotes / Notability?</div>
+    <div style="font-size:12px;color:#7A7168;margin-bottom:14px;">On Chrome/Edge: <strong>Ctrl+P</strong> (Windows) or <strong>Cmd+P</strong> (Mac) → Save as PDF → uncheck Headers/Footers → check Background Graphics</div>
+    <button id="print-btn" style="background:#7A9E7E;color:white;border:none;border-radius:10px;padding:12px 28px;font-size:14px;font-weight:600;cursor:pointer;">🖨️ Save as PDF</button>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="card-title">ADHD-Friendly Rules</div>
+    <div class="rules-list">
+      <div class="rule-pill"><span class="rule-icon">✔</span> Done is better than perfect</div>
+      <div class="rule-pill"><span class="rule-icon">🔄</span> You can restart anytime</div>
+      <div class="rule-pill"><span class="rule-icon">📅</span> Missed days don't matter</div>
+      <div class="rule-pill"><span class="rule-icon">🌱</span> Small steps count</div>
+      <div class="rule-pill"><span class="rule-icon">🎯</span> 1–3 priorities per day max</div>
+      <div class="rule-pill"><span class="rule-icon">💡</span> Use it in whatever order works</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ DAILY ═══ -->
+<div id="daily" class="section">
+  <h2 class="section-title">Daily Planner</h2>
+  <p class="section-sub">Pick 1–3 priorities. Use the brain dump. Ignore the rest if needed.</p>
+
+  <!-- TODAY'S FOCUS -->
+  <div class="priority-box">
+    <div class="priority-label">🎯 Today's Focus</div>
+    <div class="priority-sub">"If I only do these, today is a win"</div>
+    <div class="priority-item">
+      <div class="priority-num">1</div>
+      <input type="text" placeholder="Most important thing today...">
+    </div>
+    <div class="priority-item">
+      <div class="priority-num">2</div>
+      <input type="text" placeholder="Second priority...">
+    </div>
+    <div class="priority-item">
+      <div class="priority-num">3</div>
+      <input type="text" placeholder="Third priority (optional)...">
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <!-- TIME BLOCKS -->
+    <div class="card">
+      <div class="card-title">⏰ Time Blocks</div>
+      <div class="time-block">
+        <div class="time-label">🌅 Morning</div>
+        <textarea placeholder="What's happening this morning..."></textarea>
+      </div>
+      <div class="time-block">
+        <div class="time-label">☀️ Afternoon</div>
+        <textarea placeholder="Afternoon plans..."></textarea>
+      </div>
+      <div class="time-block">
+        <div class="time-label">🌙 Evening</div>
+        <textarea placeholder="Evening wind-down..."></textarea>
+      </div>
+    </div>
+
+    <!-- TASK LIST -->
+    <div class="card">
+      <div class="card-title">📋 Task List</div>
+      <div id="task-list"></div>
+      <button id="add-task-btn" style="background:none;border:1.5px dashed var(--border);border-radius:8px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-light);cursor:pointer;width:100%;margin-top:10px;transition:all .2s;">+ Add task</button>
+    </div>
+  </div>
+
+  <!-- BRAIN DUMP -->
+  <div class="card">
+    <div class="card-title">🧠 Brain Dump</div>
+    <div class="card-label">"Everything in my head — just get it out"</div>
+    <textarea class="huge" placeholder="Dump everything here. No structure needed. Just let it out...&#10;&#10;Worries, ideas, tasks, random thoughts — anything taking up space in your brain."></textarea>
+  </div>
+
+  <div class="card-grid">
+    <!-- DISTRACTION TRACKER -->
+    <div class="card">
+      <div class="card-title">💭 Distraction Tracker</div>
+      <div class="card-label">"What pulled my attention today?"</div>
+      <textarea class="big" placeholder="Phone, YouTube, random thoughts...&#10;&#10;No judgment — just notice."></textarea>
+    </div>
+
+    <!-- ENERGY & MOOD -->
+    <div class="card">
+      <div class="card-title">⚡ Energy Level</div>
+      <div class="scale-row" id="energy-scale"></div>
+      <div style="margin-top:20px">
+        <div class="card-title">😊 Mood</div>
+        <div class="emoji-row" id="mood-emojis"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESET REMINDER -->
+  <div class="reset-box">
+    <div style="font-weight:600;font-size:15px;margin-bottom:4px;">🔁 Reset Reminder</div>
+    <div style="font-size:13px;color:var(--text-light);">"What do I need right now?"</div>
+    <div class="reset-chips">
+      <div class="reset-chip" data-chip="true">💧 Water</div>
+      <div class="reset-chip" data-chip="true">🥗 Food</div>
+      <div class="reset-chip" data-chip="true">🚶 Walk</div>
+      <div class="reset-chip" data-chip="true">😮‍💨 Deep breath</div>
+      <div class="reset-chip" data-chip="true">💤 Rest</div>
+      <div class="reset-chip" data-chip="true">🎵 Music</div>
+      <div class="reset-chip" data-chip="true">📵 Phone break</div>
+    </div>
+  </div>
+
+  <!-- PRINT BUTTON -->
+  <div style="display:flex;justify-content:center;margin-top:28px;margin-bottom:8px;">
+    <button id="print-btn" class="print-btn" style="display:flex;align-items:center;gap:8px;padding:12px 28px;font-size:14px;border-radius:12px;border:2px solid var(--border);background:var(--white);color:var(--text-light);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;">
+      🖨️ Save / Print This Page
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ WEEKLY ═══ -->
+<div id="weekly" class="section">
+  <h2 class="section-title">Weekly Overview</h2>
+  <p class="section-sub">Zoom out. 3 goals max. One focus. Keep it simple.</p>
+
+  <div class="card-grid">
+    <!-- WEEKLY GOALS -->
+    <div class="card">
+      <div class="card-title">🎯 Weekly Goals (max 3)</div>
+      <div style="margin-bottom:12px">
+        <div class="priority-item">
+          <div class="priority-num">1</div>
+          <input type="text" placeholder="Goal 1...">
+        </div>
+        <div class="priority-item">
+          <div class="priority-num">2</div>
+          <input type="text" placeholder="Goal 2...">
+        </div>
+        <div class="priority-item">
+          <div class="priority-num">3</div>
+          <input type="text" placeholder="Goal 3...">
+        </div>
+      </div>
+      <div class="card-title" style="margin-top:20px;">💬 This week I'm focusing on…</div>
+      <textarea placeholder="One sentence. What matters most this week?"></textarea>
+    </div>
+
+    <!-- HABIT TRACKER -->
+    <div class="card">
+      <div class="card-title">✅ Habit Tracker (max 5)</div>
+      <div id="habit-tracker"></div>
+    </div>
+  </div>
+
+  <!-- WEEKLY SCHEDULE -->
+  <div class="card">
+    <div class="card-title">📅 Weekly Schedule</div>
+    <div class="week-grid" id="week-grid"></div>
+  </div>
+
+  <!-- WEEKLY REFLECTION -->
+  <div class="card">
+    <div class="card-title">🪞 Weekly Reflection</div>
+    <div class="card-grid-3">
+      <div>
+        <div class="card-label">What worked?</div>
+        <textarea class="big" placeholder="What went well..."></textarea>
+      </div>
+      <div>
+        <div class="card-label">What didn't?</div>
+        <textarea class="big" placeholder="What was hard..."></textarea>
+      </div>
+      <div>
+        <div class="card-label">What should I adjust?</div>
+        <textarea class="big" placeholder="Changes for next week..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ MONTHLY ═══ -->
+<div id="monthly" class="section">
+  <h2 class="section-title">Monthly Planner</h2>
+  <p class="section-sub">Big picture. Important dates. Simple reset.</p>
+
+  <!-- CALENDAR -->
+  <div class="card">
+    <div class="card-title">📆 <span id="month-label"></span></div>
+    <div class="cal-grid" id="cal-day-names"></div>
+    <div class="cal-grid" style="margin-top:4px;" id="cal-grid"></div>
+  </div>
+
+  <div class="card-grid">
+    <!-- BIG GOALS -->
+    <div class="card">
+      <div class="card-title">🚀 Monthly Goals (3–5 max)</div>
+      <div id="monthly-goals"></div>
+      <button id="add-monthly-goal-btn" style="background:none;border:1.5px dashed var(--border);border-radius:8px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-light);cursor:pointer;width:100%;margin-top:10px;transition:all .2s;">+ Add goal</button>
+    </div>
+
+    <!-- IMPORTANT DATES -->
+    <div class="card">
+      <div class="card-title">📌 Important Dates</div>
+      <textarea class="big" placeholder="Exams, deadlines, events, appointments...&#10;&#10;Format: Date — Event"></textarea>
+    </div>
+  </div>
+
+  <!-- MONTHLY RESET -->
+  <div class="card" style="border-color: var(--accent); background: linear-gradient(135deg, #FFF5EE, var(--white));">
+    <div class="card-title" style="color:var(--accent);">🔄 Monthly Reset</div>
+    <div class="card-grid">
+      <div>
+        <div class="card-label">What's stressing me?</div>
+        <textarea class="big" placeholder="Get it out. Name it..."></textarea>
+      </div>
+      <div>
+        <div class="card-label">What can I simplify?</div>
+        <textarea class="big" placeholder="What to let go of, delegate, or drop..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ LOW ENERGY ═══ -->
+<div id="lowenergy" class="section">
+  <h2 class="section-title">Low Energy Day</h2>
+  <p class="section-sub">Some days are hard. That's okay. This page is permission to do less.</p>
+
+  <div class="affirm-banner">
+    <div class="affirm-text">"Surviving is enough today. 💙"</div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="energy-tag energy-low">LOW ENERGY MODE</div>
+      <div class="card-title">🛡️ Bare Minimum Checklist</div>
+      <div id="survival-checklist"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💧 Self-Care Reminders</div>
+      <div class="reset-chips" style="flex-direction:column;gap:10px;">
+        <div class="reset-chip" data-chip="true" style="text-align:left;">🥤 Drink something (water, juice, tea)</div>
+        <div class="reset-chip" data-chip="true" style="text-align:left;">🥣 Eat something — anything is fine</div>
+        <div class="reset-chip" data-chip="true" style="text-align:left;">🚿 Shower if you can</div>
+        <div class="reset-chip" data-chip="true" style="text-align:left;">🌿 Go outside for 5 minutes</div>
+        <div class="reset-chip" data-chip="true" style="text-align:left;">📵 Put the phone down for a bit</div>
+        <div class="reset-chip" data-chip="true" style="text-align:left;">😴 Rest without guilt</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📋 Today's ONE Task (if anything)</div>
+    <div class="card-label">"The single smallest thing I could do..."</div>
+    <input type="text" placeholder="Just one small thing. That's enough.">
+    <div style="margin-top:20px;">
+      <div class="card-title">💭 How I'm feeling</div>
+      <textarea class="big" placeholder="No pressure. Just write whatever's there..."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ HIGH ENERGY ═══ -->
+<div id="highenergy" class="section">
+  <h2 class="section-title">High Energy Day</h2>
+  <p class="section-sub">You've got energy — use it wisely. Protect the hyperfocus.</p>
+
+  <div class="affirm-banner" style="background: linear-gradient(135deg, #FFF5EE, #FFE8D0); border-color: var(--accent);">
+    <div class="affirm-text" style="color:var(--accent);">"Channel the energy. Do the big stuff. ⚡"</div>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="energy-tag energy-high">HIGH ENERGY MODE</div>
+      <div class="card-title">⚡ Deep Work Tasks</div>
+      <div class="card-label">"Save these for when you have focus"</div>
+      <div id="deep-work-tasks"></div>
+      <button id="add-deep-task-btn" style="background:none;border:1.5px dashed var(--border);border-radius:8px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-light);cursor:pointer;width:100%;margin-top:10px;transition:all .2s;">+ Add deep work task</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔥 Hyperfocus Rules</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:4px;">
+        <div class="rule-pill"><span class="rule-icon">📵</span> Phone on silent / Do Not Disturb</div>
+        <div class="rule-pill"><span class="rule-icon">⏰</span> Set a timer — don't go past 90 min</div>
+        <div class="rule-pill"><span class="rule-icon">💧</span> Water & snacks before you start</div>
+        <div class="rule-pill"><span class="rule-icon">🚽</span> Use the bathroom first</div>
+        <div class="rule-pill"><span class="rule-icon">📝</span> Write down distractions, don't follow them</div>
+        <div class="rule-pill"><span class="rule-icon">🧠</span> One task at a time only</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🚀 Big Project Focus</div>
+    <div class="card-grid">
+      <div>
+        <div class="card-label">Project I'm tackling</div>
+        <input type="text" placeholder="What's the big thing?">
+        <div style="margin-top:12px;">
+          <div class="card-label">Why it matters</div>
+          <textarea placeholder="Remind yourself why this is worth the effort..."></textarea>
+        </div>
+      </div>
+      <div>
+        <div class="card-label">Distractions that came up (write & ignore)</div>
+        <textarea class="big" placeholder="Things that tried to pull me away...&#10;&#10;Write them here so your brain lets go."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ BRAIN DUMP ═══ -->
+<div id="braindump" class="section">
+  <h2 class="section-title">Brain Dump</h2>
+  <p class="section-sub">Get it all out of your head. Sort it later — or don't. No wrong answers here.</p>
+
+  <div class="affirm-banner">
+    <div class="affirm-text">"Your brain is for having ideas, not holding them. 🧠"</div>
+  </div>
+
+  <!-- 3-COLUMN DOPAMINE DUMP -->
+  <div class="card-grid-3" style="margin-bottom:20px;">
+    <div class="dump-col dump-must">
+      <div class="dump-col-header">
+        <div class="dump-col-icon">🔥</div>
+        <div class="dump-col-title">Must Do</div>
+      </div>
+      <div class="dump-col-sub">Things with real consequences if skipped</div>
+      <textarea placeholder="Deadlines, urgent tasks, things people are waiting on...&#10;&#10;These matter TODAY."></textarea>
+    </div>
+    <div class="dump-col dump-should">
+      <div class="dump-col-header">
+        <div class="dump-col-icon">📌</div>
+        <div class="dump-col-title">Should Do</div>
+      </div>
+      <div class="dump-col-sub">Important but not on fire yet</div>
+      <textarea placeholder="Things that would move your life forward...&#10;&#10;Not urgent, but not nothing."></textarea>
+    </div>
+    <div class="dump-col dump-shiny">
+      <div class="dump-col-header">
+        <div class="dump-col-icon">✨</div>
+        <div class="dump-col-title">Shiny Objects</div>
+      </div>
+      <div class="dump-col-sub">Ideas, rabbit holes, "what if" thoughts</div>
+      <textarea placeholder="New project ideas, random curiosities, things that grabbed your attention...&#10;&#10;Park them here. Stay curious."></textarea>
+    </div>
+  </div>
+
+  <!-- FREE DUMP -->
+  <div class="card">
+    <div class="card-title">🌊 Full Freestyle Dump</div>
+    <div class="card-label">"No categories. No pressure. Just write everything."</div>
+    <textarea class="huge" placeholder="Everything in your head right now. Worries, tasks, people you need to text, that thing you keep forgetting, the idea you had in the shower...&#10;&#10;Brain clutter belongs HERE, not in your head."></textarea>
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title">😤 What's Bothering Me</div>
+      <div class="card-label">Name it to tame it</div>
+      <textarea class="big" placeholder="Frustrations, anxieties, things stuck on loop...&#10;&#10;Writing them down makes them smaller."></textarea>
+    </div>
+    <div class="card">
+      <div class="card-title">💡 Ideas I Don't Want to Lose</div>
+      <div class="card-label">Capture before they disappear</div>
+      <textarea class="big" placeholder="Business ideas, creative sparks, things to research later...&#10;&#10;Even the weird ones."></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ TOP 3 ═══ -->
+<div id="top3" class="section">
+  <h2 class="section-title">Today's Top 3</h2>
+  <p class="section-sub">Three things. That's it. If you do these, today is a genuine win.</p>
+
+  <div class="win-banner">
+    <div class="win-banner-title">⚡ The Rule: Pick 3, protect them fiercely.</div>
+    <div class="win-banner-sub">Your ADHD brain wants to do 47 things. That's beautiful — and also chaos. Today, just these 3.</div>
+  </div>
+
+  <!-- BIG 3 -->
+  <div class="card" style="border-color:var(--accent);background:linear-gradient(135deg,#FFF8F4,var(--white));margin-bottom:24px;">
+    <div class="card-title" style="color:var(--accent);">🎯 My 3 Non-Negotiables Today</div>
+    <div class="card-label" style="margin-bottom:20px;">"If only these get done, I haven't failed — I've succeeded."</div>
+
+    <div class="big-priority-item">
+      <div class="big-priority-num bpn-1">1</div>
+      <div class="big-priority-inner">
+        <input type="text" placeholder="The most important thing today...">
+        <textarea placeholder="Why this matters / any notes..."></textarea>
+      </div>
+    </div>
+    <div class="big-priority-item">
+      <div class="big-priority-num bpn-2">2</div>
+      <div class="big-priority-inner">
+        <input type="text" placeholder="Second priority...">
+        <textarea placeholder="Why this matters / any notes..."></textarea>
+      </div>
+    </div>
+    <div class="big-priority-item">
+      <div class="big-priority-num bpn-3">3</div>
+      <div class="big-priority-inner">
+        <input type="text" placeholder="Third priority (bonus if you get here)...">
+        <textarea placeholder="Why this matters / any notes..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <!-- NOT TODAY LIST -->
+    <div class="card" style="border-color:var(--blue-light);">
+      <div class="card-title">🚫 Not Today List</div>
+      <div class="card-label">"Write everything you're consciously choosing to NOT do today"</div>
+      <textarea class="big" placeholder="Deliberately parking these...&#10;&#10;They're real, they're valid — just not today."></textarea>
+      <div style="margin-top:12px;font-size:12px;color:var(--text-light);font-style:italic;">✨ Pro tip: Writing these down tells your brain it's safe to let them go temporarily.</div>
+    </div>
+
+    <!-- END OF DAY CHECK-IN -->
+    <div class="card">
+      <div class="card-title">🌅 End of Day Check-In</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px;">
+        <div>
+          <div class="card-label">Task 1 — did I do it?</div>
+          <div class="reset-chips">
+            <div class="reset-chip" data-chip="true">✅ Done</div>
+            <div class="reset-chip" data-chip="true">⚡ Partial</div>
+            <div class="reset-chip" data-chip="true">➡️ Tomorrow</div>
+          </div>
+        </div>
+        <div>
+          <div class="card-label">Task 2 — did I do it?</div>
+          <div class="reset-chips">
+            <div class="reset-chip" data-chip="true">✅ Done</div>
+            <div class="reset-chip" data-chip="true">⚡ Partial</div>
+            <div class="reset-chip" data-chip="true">➡️ Tomorrow</div>
+          </div>
+        </div>
+        <div>
+          <div class="card-label">Task 3 — did I do it?</div>
+          <div class="reset-chips">
+            <div class="reset-chip" data-chip="true">✅ Done</div>
+            <div class="reset-chip" data-chip="true">⚡ Partial</div>
+            <div class="reset-chip" data-chip="true">➡️ Tomorrow</div>
+          </div>
+        </div>
+        <div>
+          <div class="card-label">Today's honest rating</div>
+          <div class="scale-row" id="top3-score"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🏆 One Win to Celebrate</div>
+    <div class="card-label">"Even a tiny victory counts. What went right today?"</div>
+    <textarea placeholder="It could be as small as replying to one email, drinking water, getting out of bed...&#10;&#10;It all counts. Write it here."></textarea>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ RESET BUTTON ═══ -->
+<div id="reset" class="section">
+
+  <div class="reset-hero">
+    <div class="reset-hero-emoji">🔄</div>
+    <h2 class="reset-hero-title">The "I've Been Gone" Reset</h2>
+    <p class="reset-hero-sub">You disappeared for a few days (or weeks). That's okay. This page exists exactly for this moment. No guilt, no shame — just a soft landing back.</p>
+  </div>
+
+  <!-- HOW LONG WERE YOU GONE -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">⏳ How Long Were You Gone?</div>
+    <div class="card-label">Pick one — totally judgment-free:</div>
+    <div class="days-gone-row">
+      <div class="days-gone-btn" data-daysgone="true">A day or two</div>
+      <div class="days-gone-btn" data-daysgone="true">About a week</div>
+      <div class="days-gone-btn" data-daysgone="true">A few weeks</div>
+      <div class="days-gone-btn" data-daysgone="true">Honestly… months</div>
+      <div class="days-gone-btn" data-daysgone="true">I've never really started</div>
+    </div>
+    <div style="margin-top:16px;font-size:14px;color:var(--sage-dark);font-style:italic;padding:12px 16px;background:var(--beige);border-radius:10px;" id="days-gone-msg">
+      → Whatever you picked: you're back now. That's the only thing that matters.
+    </div>
+  </div>
+
+  <!-- THE COMEBACK PROTOCOL -->
+  <div class="comeback-card">
+    <div class="comeback-msg">"Missing days doesn't mean you failed the planner. It means you're human. The planner doesn't care how long you were gone — it's just happy you're here."</div>
+    <div class="card-title">🪜 The 5-Step Comeback Protocol</div>
+    <div style="margin-top:12px;">
+      <div class="forgive-step">
+        <div class="forgive-icon">💨</div>
+        <div class="forgive-text">
+          <strong>Step 1: Take one breath and release the guilt.</strong>
+          <p>Guilt uses up working memory — and you need that RAM for today. Let it go right now. Actually let it go.</p>
+        </div>
+      </div>
+      <div class="forgive-step">
+        <div class="forgive-icon">🗑️</div>
+        <div class="forgive-text">
+          <strong>Step 2: Don't catch up. Just restart.</strong>
+          <p>You don't need to fill in what you missed. Cross out the old stuff. Today is a fresh document.</p>
+        </div>
+      </div>
+      <div class="forgive-step">
+        <div class="forgive-icon">🎯</div>
+        <div class="forgive-text">
+          <strong>Step 3: Name ONE thing for today.</strong>
+          <p>Just one. Not three. Not a list. One single task that would make coming back feel worth it.</p>
+        </div>
+      </div>
+      <div class="forgive-step">
+        <div class="forgive-icon">⏱️</div>
+        <div class="forgive-text">
+          <strong>Step 4: Do 10 minutes — just 10.</strong>
+          <p>Set a timer. If you stop after 10, you still came back. If you keep going, bonus. Either way: win.</p>
+        </div>
+      </div>
+      <div class="forgive-step">
+        <div class="forgive-icon">🌱</div>
+        <div class="forgive-text">
+          <strong>Step 5: Tell yourself the truth.</strong>
+          <p>You didn't "fall off." You paused. Pausing and returning is literally what long-term progress looks like.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TODAY'S RE-ENTRY -->
+  <div class="card-grid">
+    <div class="card" style="border-color:var(--sage-light);">
+      <div class="card-title">✍️ My Re-Entry Task</div>
+      <div class="card-label">"The ONE thing I'm doing today to come back"</div>
+      <input type="text" placeholder="Just one small, specific task..." style="margin-bottom:16px;">
+      <div class="card-label">How long will I try for?</div>
+      <div class="reset-chips">
+        <div class="reset-chip" data-chip="true">⏱️ 5 min</div>
+        <div class="reset-chip" data-chip="true">⏱️ 10 min</div>
+        <div class="reset-chip" data-chip="true">⏱️ 25 min</div>
+        <div class="reset-chip" data-chip="true">⏱️ Whatever happens</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">💬 What Pulled Me Away?</div>
+      <div class="card-label">No judgment — just honest reflection</div>
+      <textarea class="big" placeholder="Life happened. What was it?&#10;&#10;Overwhelm, burnout, illness, chaos, a bad week, lost the habit...&#10;&#10;Name it. You don't have to fix it — just see it."></textarea>
+    </div>
+  </div>
+
+  <!-- SELF-COMPASSION AFFIRMATIONS -->
+  <div class="card" style="background:linear-gradient(135deg,#EEF6EF,var(--white));border-color:var(--sage-light);">
+    <div class="card-title">💚 Read These Out Loud (seriously, try it)</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+      <div class="rule-pill" style="font-size:14px;padding:14px 16px;background:var(--white);">🌿 "Returning is not weakness. It takes more courage than never leaving."</div>
+      <div class="rule-pill" style="font-size:14px;padding:14px 16px;background:var(--white);">🧠 "My ADHD brain works differently. I'm not lazy — I'm wired differently."</div>
+      <div class="rule-pill" style="font-size:14px;padding:14px 16px;background:var(--white);">✨ "One day doesn't define my progress. Today I choose to begin again."</div>
+      <div class="rule-pill" style="font-size:14px;padding:14px 16px;background:var(--white);">💙 "Missing days is part of the process. The planner is still here. I can always come back."</div>
+    </div>
+    <div style="margin-top:16px;">
+      <div class="card-label">Write your own comeback mantra</div>
+      <textarea placeholder="What do YOU need to hear right now?&#10;&#10;Write it to yourself..."></textarea>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════ DOPAMINE MENU ═══ -->
+<div id="dopamine" class="section">
+  <h2 class="section-title">Dopamine Menu 🍽️</h2>
+  <p class="section-sub">When your brain is understimulated, it forgets what feels good. This is your personalised reminder. Edit it, make it yours.</p>
+
+  <div class="affirm-banner" style="background:linear-gradient(135deg,#FFF5EE,#FFE8D0);border-color:var(--accent);">
+    <div class="affirm-text" style="color:var(--accent);">"You're not lazy. You're under-dopamined. Order something from the menu. ✨"</div>
+  </div>
+
+  <div class="card-grid" style="margin-bottom:20px;">
+    <!-- STARTERS -->
+    <div class="card" style="border-top:4px solid var(--sage);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="font-size:24px;">🥗</span>
+        <div>
+          <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);">Starters</div>
+          <div style="font-size:12px;color:var(--text-light);font-style:italic;">5 minutes or less · Quick dopamine hits</div>
+        </div>
+      </div>
+      <div class="dopamine-items" id="starters-list">
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Splash cold water on your face"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Do 10 jumping jacks"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Text a friend something funny"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Make a hot drink"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Step outside for 2 minutes"></div>
+      </div>
+      <button data-dopalist="starters-list" class="dopa-add-btn">+ Add your own starter</button>
+    </div>
+
+    <!-- MAINS -->
+    <div class="card" style="border-top:4px solid var(--accent);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="font-size:24px;">🍖</span>
+        <div>
+          <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);">Mains</div>
+          <div style="font-size:12px;color:var(--text-light);font-style:italic;">Big hobbies · Things you genuinely love</div>
+        </div>
+      </div>
+      <div class="dopamine-items" id="mains-list">
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" placeholder="Your favourite hobby..."></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" placeholder="Creative project you love..."></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" placeholder="Sport or movement you enjoy..."></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" placeholder="Something you'd do for hours..."></div>
+      </div>
+      <button data-dopalist="mains-list" class="dopa-add-btn">+ Add your main</button>
+    </div>
+  </div>
+
+  <div class="card-grid">
+    <!-- SIDES -->
+    <div class="card" style="border-top:4px solid var(--blue);">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="font-size:24px;">🎧</span>
+        <div>
+          <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);">Sides</div>
+          <div style="font-size:12px;color:var(--text-light);font-style:italic;">Passive · Low-effort background stimulation</div>
+        </div>
+      </div>
+      <div class="dopamine-items" id="sides-list">
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Put on a comfort podcast"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Play a lo-fi playlist"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Rewatch a comfort show episode"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Browse Pinterest or Spotify"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Light a candle or use a diffuser"></div>
+      </div>
+      <button data-dopalist="sides-list" class="dopa-add-btn">+ Add a side</button>
+    </div>
+
+    <!-- DESSERTS -->
+    <div class="card" style="border-top:4px solid #C9A0DC;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+        <span style="font-size:24px;">🍰</span>
+        <div>
+          <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);">Desserts</div>
+          <div style="font-size:12px;color:var(--text-light);font-style:italic;">Low-effort treats · Pure comfort, zero guilt</div>
+        </div>
+      </div>
+      <div class="dopamine-items" id="desserts-list">
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Eat your favourite snack mindfully"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Take a nap without guilt"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Watch a comfort YouTube video"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Cosy up with a blanket"></div>
+        <div class="dopamine-item"><div class="check-box" data-check="true"></div><input type="text" class="check-text" value="Do absolutely nothing — on purpose"></div>
+      </div>
+      <button data-dopalist="desserts-list" class="dopa-add-btn">+ Add a dessert</button>
+    </div>
+  </div>
+
+  <!-- TODAY'S ORDER -->
+  <div class="card" style="border-color:var(--accent);background:linear-gradient(135deg,#FFF8F4,var(--white));">
+    <div class="card-title" style="color:var(--accent);">📋 Today's Order</div>
+    <div class="card-label">"What am I choosing from the menu right now?"</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:4px;">
+      <div>
+        <div class="card-label">I'm feeling… (what kind of understimulated?)</div>
+        <div class="reset-chips">
+          <div class="reset-chip" data-chip="true">😶 Bored & flat</div>
+          <div class="reset-chip" data-chip="true">😤 Restless & wired</div>
+          <div class="reset-chip" data-chip="true">😔 Low & sad</div>
+          <div class="reset-chip" data-chip="true">🤯 Overwhelmed</div>
+          <div class="reset-chip" data-chip="true">😴 Tired but can't rest</div>
+        </div>
+      </div>
+      <div>
+        <div class="card-label">I'm going to try…</div>
+        <input type="text" placeholder="Pick one thing from the menu above...">
+      </div>
+      <div>
+        <div class="card-label">How did it feel after?</div>
+        <div class="emoji-row" id="dopa-mood"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ BREAKDOWN ═══ -->
+<div id="breakdown" class="section">
+  <h2 class="section-title">Task Help</h2>
+  <p class="section-sub">Break big tasks into tiny steps. Get unstuck. Get back on track.</p>
+
+  <!-- TASK BREAKDOWN -->
+  <div class="card">
+    <div class="badge">TASK BREAKDOWN</div>
+    <div class="card-title">🔍 Break It Down</div>
+    <div class="card-label">"Big task feels impossible → make it tiny"</div>
+    <div style="margin-bottom:16px;">
+      <div class="card-label">The big task</div>
+      <input type="text" placeholder="e.g. Write essay, Clean room, Send emails...">
+    </div>
+    <div id="breakdown-steps"></div>
+    <button id="add-breakdown-btn" style="background:none;border:1.5px dashed var(--border);border-radius:8px;padding:8px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text-light);cursor:pointer;width:100%;margin-top:10px;transition:all .2s;">+ Add next tiny step</button>
+  </div>
+
+  <!-- BRAIN RESET -->
+  <div class="card">
+    <div class="badge">BRAIN RESET</div>
+    <div class="card-title">🧠 Full Brain Dump</div>
+    <div class="card-label">"Dump everything. Clear the mental RAM."</div>
+    <textarea class="huge" placeholder="Everything in your head. No order. No filter. Just write.&#10;&#10;Tasks, worries, things you can't stop thinking about, random ideas..."></textarea>
+  </div>
+
+  <div class="card-grid">
+    <!-- DISTRACTION LOG -->
+    <div class="card">
+      <div class="badge">DISTRACTION LOG</div>
+      <div class="card-title">💭 What distracted me?</div>
+      <div class="card-label">What?</div>
+      <textarea placeholder="What pulled me away..."></textarea>
+      <div class="card-label" style="margin-top:14px;">Why?</div>
+      <textarea placeholder="Boredom, anxiety, noise..."></textarea>
+      <div class="card-label" style="margin-top:14px;">What can I change?</div>
+      <textarea placeholder="One thing I could try next time..."></textarea>
+    </div>
+
+    <!-- GET BACK ON TRACK -->
+    <div class="card" style="border-color:var(--sage-light);">
+      <div class="badge">GET BACK ON TRACK</div>
+      <div class="card-title">🔄 Reset Protocol</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px;">
+        <div class="rule-pill"><span>1.</span> Take 3 deep breaths</div>
+        <div class="rule-pill"><span>2.</span> Close all tabs except one</div>
+        <div class="rule-pill"><span>3.</span> Write down one next step</div>
+        <div class="rule-pill"><span>4.</span> Set a 10-min timer</div>
+        <div class="rule-pill"><span>5.</span> Just start</div>
+      </div>
+      <div class="card-label">What's the next smallest step?</div>
+      <input type="text" placeholder="The tiniest possible action...">
+      <div class="card-label" style="margin-top:14px;">What can I restart right now?</div>
+      <input type="text" placeholder="One thing I can do in the next 2 minutes...">
+    </div>
+  </div>
+
+  <!-- GOAL BREAKDOWN -->
+  <div class="card">
+    <div class="badge">GOAL BREAKDOWN</div>
+    <div class="card-title">🎯 Goal → Action</div>
+    <div class="card-grid">
+      <div>
+        <div class="card-label">Big goal</div>
+        <input type="text" placeholder="What do I want to achieve?">
+        <div style="margin-top:12px">
+          <div class="card-label">Why it matters</div>
+          <textarea placeholder="Why does this goal actually matter to me?"></textarea>
+        </div>
+        <div style="margin-top:12px">
+          <div class="card-label">First action (right now)</div>
+          <input type="text" placeholder="The very first tiny step I can do today...">
+        </div>
+      </div>
+      <div>
+        <div class="card-label">Steps to get there</div>
+        <textarea class="huge" placeholder="Step 1: ...&#10;Step 2: ...&#10;Step 3: ...&#10;Step 4: ...&#10;&#10;Keep them small and specific."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ ROUTINES ═══ -->
+<div id="routines" class="section">
+  <h2 class="section-title">Routines</h2>
+  <p class="section-sub">Simple morning and night routines. Build the scaffolding, not the prison.</p>
+
+  <div class="card-grid">
+    <!-- MORNING -->
+    <div class="card">
+      <div class="badge">MORNING ROUTINE</div>
+      <div class="card-title">🌅 Morning Reset</div>
+      <div id="morning-routine"></div>
+      <div style="margin-top:20px">
+        <div class="card-label">Today's #1 priority task</div>
+        <input type="text" placeholder="The one thing I want to do today...">
+      </div>
+      <div style="margin-top:12px">
+        <div class="card-label">How I'm feeling (honest check-in)</div>
+        <div class="emoji-row" id="morning-mood"></div>
+      </div>
+    </div>
+
+    <!-- NIGHT -->
+    <div class="card">
+      <div class="badge">NIGHT RESET</div>
+      <div class="card-title">🌙 Night Wind-Down</div>
+      <div id="night-routine"></div>
+      <div style="margin-top:20px">
+        <div class="card-label">Tomorrow's top priority</div>
+        <input type="text" placeholder="So I don't have to think about it in the morning...">
+      </div>
+      <div style="margin-top:12px">
+        <div class="card-label">One win from today</div>
+        <textarea placeholder="Even tiny counts — what went okay?"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDY/WORK -->
+  <div class="card">
+    <div class="badge">FOCUS SESSION</div>
+    <div class="card-title">📚 Study / Work Session</div>
+    <div class="card-grid">
+      <div>
+        <div class="card-label">Subject / Project</div>
+        <input type="text" placeholder="What am I working on?">
+        <div style="margin-top:12px">
+          <div class="card-label">Session goal</div>
+          <input type="text" placeholder="What do I want to finish in this session?">
+        </div>
+        <div style="margin-top:12px">
+          <div class="card-label">Timer (Pomodoro: 25 min work, 5 min break)</div>
+          <div id="pomodoro" style="display:flex;align-items:center;gap:12px;margin-top:8px;">
+            <div id="timer-display" style="font-family:'DM Serif Display',serif;font-size:36px;color:var(--sage-dark);">25:00</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <button id="timer-start" style="background:var(--sage);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;">▶ Start</button>
+              <button id="timer-reset-btn" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text-light);">↺ Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card-label">Study goals / to-do this session</div>
+        <textarea class="huge" placeholder="• Read chapter 3&#10;• Do practice problems&#10;• Review notes&#10;• ..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+(function() {
+'use strict';
+
+// ── DATE ──
+var now = new Date();
+document.getElementById('current-date').textContent = now.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+
+// ── SECTION NAV ──
+var sectionOrder = ['cover','daily','weekly','monthly','lowenergy','highenergy','braindump','top3','reset','dopamine','breakdown','routines'];
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+  var sec = document.getElementById(id);
+  if (sec) sec.classList.add('active');
+  var idx = sectionOrder.indexOf(id);
+  var btns = document.querySelectorAll('.tab-btn');
+  if (idx >= 0 && btns[idx]) btns[idx].classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ── CHECK BOXES ──
+function toggleCheck(box) {
+  box.classList.toggle('checked');
+  var txt = box.nextElementSibling;
+  if (txt) txt.classList.toggle('done');
+}
+
+// ── CHIPS ──
+function toggleChip(el) { el.classList.toggle('active'); }
+
+// ── TASK LIST ──
+function addTask(text) {
+  var list = document.getElementById('task-list');
+  if (!list) return;
+  var div = document.createElement('div');
+  div.className = 'checklist-item';
+  var box = document.createElement('div');
+  box.className = 'check-box';
+  box.setAttribute('data-check', 'true');
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'check-text';
+  inp.placeholder = 'Task...';
+  if (text) inp.value = text;
+  div.appendChild(box);
+  div.appendChild(inp);
+  list.appendChild(div);
+}
+addTask(); addTask(); addTask();
+
+// ── SCALE BUILDER ──
+function buildScale(id) {
+  var row = document.getElementById(id);
+  if (!row) return;
+  [1,2,3,4,5].forEach(function(n) {
+    var btn = document.createElement('div');
+    btn.className = 'scale-btn';
+    btn.textContent = n;
+    btn.setAttribute('data-scale', id);
+    row.appendChild(btn);
+  });
+}
+buildScale('energy-scale');
+buildScale('top3-score');
+
+// ── MOOD ROWS ──
+function buildMoodRow(id) {
+  var row = document.getElementById(id);
+  if (!row) return;
+  ['😴','😔','😐','🙂','😄'].forEach(function(e) {
+    var btn = document.createElement('div');
+    btn.className = 'emoji-btn';
+    btn.textContent = e;
+    btn.setAttribute('data-mood', id);
+    row.appendChild(btn);
+  });
+}
+buildMoodRow('mood-emojis');
+buildMoodRow('morning-mood');
+buildMoodRow('dopa-mood');
+
+// ── HABIT TRACKER ──
+var habitNames = ['Drink water','Move body','Sleep routine','Study/work','Journal'];
+var dayLetters = ['M','T','W','T','F','S','S'];
+var ht = document.getElementById('habit-tracker');
+if (ht) {
+  habitNames.forEach(function(h) {
+    var row = document.createElement('div');
+    row.className = 'habit-row';
+    var name = document.createElement('div');
+    name.className = 'habit-name';
+    name.textContent = h;
+    var dots = document.createElement('div');
+    dots.className = 'habit-dots';
+    dayLetters.forEach(function(d) {
+      var dot = document.createElement('div');
+      dot.className = 'habit-dot';
+      dot.title = d;
+      dot.setAttribute('data-habitdot', 'true');
+      dots.appendChild(dot);
+    });
+    row.appendChild(name);
+    row.appendChild(dots);
+    ht.appendChild(row);
+  });
+}
+
+// ── WEEKLY GRID ──
+var wg = document.getElementById('week-grid');
+if (wg) {
+  ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(function(d) {
+    var col = document.createElement('div');
+    col.className = 'day-col';
+    var dn = document.createElement('div');
+    dn.className = 'day-name';
+    dn.textContent = d;
+    var ta = document.createElement('textarea');
+    ta.placeholder = '...';
+    col.appendChild(dn);
+    col.appendChild(ta);
+    wg.appendChild(col);
+  });
+}
+
+// ── MONTHLY CALENDAR ──
+var monthLabel = document.getElementById('month-label');
+var dayNamesEl = document.getElementById('cal-day-names');
+var calGrid = document.getElementById('cal-grid');
+var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+if (monthLabel) monthLabel.textContent = monthNames[now.getMonth()] + ' ' + now.getFullYear();
+if (dayNamesEl) {
+  ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].forEach(function(d) {
+    var el = document.createElement('div');
+    el.className = 'cal-day-name';
+    el.textContent = d;
+    dayNamesEl.appendChild(el);
+  });
+}
+if (calGrid) {
+  var firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+  var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  for (var i = 0; i < firstDay; i++) { calGrid.appendChild(document.createElement('div')); }
+  for (var d = 1; d <= daysInMonth; d++) {
+    var cell = document.createElement('div');
+    cell.className = 'cal-cell' + (d === now.getDate() ? ' today' : '');
+    var num = document.createElement('div');
+    num.className = 'cal-num';
+    num.textContent = d;
+    cell.appendChild(num);
+    cell.setAttribute('data-calcell', 'true');
+    calGrid.appendChild(cell);
+  }
+}
+
+// ── CHECKLIST BUILDERS ──
+function buildChecklist(containerId, items) {
+  var c = document.getElementById(containerId);
+  if (!c) return;
+  items.forEach(function(item) {
+    var div = document.createElement('div');
+    div.className = 'checklist-item';
+    var box = document.createElement('div');
+    box.className = 'check-box';
+    box.setAttribute('data-check', 'true');
+    var inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'check-text';
+    inp.value = item;
+    div.appendChild(box);
+    div.appendChild(inp);
+    c.appendChild(div);
+  });
+}
+
+function addCheckItem(containerId, placeholder) {
+  var c = document.getElementById(containerId);
+  if (!c) return;
+  var div = document.createElement('div');
+  div.className = 'checklist-item';
+  var box = document.createElement('div');
+  box.className = 'check-box';
+  box.setAttribute('data-check', 'true');
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'check-text';
+  inp.placeholder = placeholder || 'Add item...';
+  div.appendChild(box);
+  div.appendChild(inp);
+  c.appendChild(div);
+}
+
+buildChecklist('survival-checklist', ['Woke up','Had something to drink','Had something to eat','Got dressed (even partially)','Replied to one important message','Moved from bed/couch at least once']);
+buildChecklist('morning-routine', ['Drink water','Eat something','Wash face / shower','Take medication (if applicable)','Set 1 priority for today']);
+buildChecklist('night-routine', ['Review what I did today','Write tomorrow\'s top priority','Put phone away / charge outside room','Prep anything for tomorrow','Wind down: reading, quiet, low light']);
+
+addCheckItem('deep-work-tasks', 'Deep work task...');
+addCheckItem('deep-work-tasks', 'Deep work task...');
+addCheckItem('deep-work-tasks', 'Deep work task...');
+
+addCheckItem('monthly-goals', 'Monthly goal...');
+addCheckItem('monthly-goals', 'Monthly goal...');
+addCheckItem('monthly-goals', 'Monthly goal...');
+
+// ── BREAKDOWN STEPS ──
+var stepCount = 0;
+function addBreakdownStep() {
+  stepCount++;
+  var c = document.getElementById('breakdown-steps');
+  if (!c) return;
+  var div = document.createElement('div');
+  div.className = 'breakdown-step';
+  var sn = document.createElement('div');
+  sn.className = 'step-num';
+  sn.textContent = stepCount;
+  var box = document.createElement('div');
+  box.className = 'check-box';
+  box.setAttribute('data-check', 'true');
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'check-text';
+  inp.placeholder = 'Tiny step ' + stepCount + '...';
+  div.appendChild(sn); div.appendChild(box); div.appendChild(inp);
+  c.appendChild(div);
+}
+[1,2,3,4].forEach(function() { addBreakdownStep(); });
+
+// ── DOPAMINE ITEM ──
+function addDopamineItem(listId) {
+  var list = document.getElementById(listId);
+  if (!list) return;
+  var div = document.createElement('div');
+  div.className = 'dopamine-item';
+  var box = document.createElement('div');
+  box.className = 'check-box';
+  box.setAttribute('data-check', 'true');
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.className = 'check-text';
+  inp.placeholder = 'Add your own...';
+  div.appendChild(box); div.appendChild(inp);
+  list.appendChild(div);
+  inp.focus();
+}
+
+// ── TIMER ──
+var timerInterval = null;
+var timerSeconds = 25 * 60;
+var timerRunning = false;
+
+function updateTimerDisplay() {
+  var el = document.getElementById('timer-display');
+  if (!el) return;
+  var m = Math.floor(timerSeconds/60).toString().padStart(2,'0');
+  var s = (timerSeconds%60).toString().padStart(2,'0');
+  el.textContent = m + ':' + s;
+}
+
+function startTimer() {
+  var btn = document.getElementById('timer-start');
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    if (btn) { btn.textContent = '▶ Start'; btn.style.background = 'var(--sage)'; }
+  } else {
+    timerRunning = true;
+    if (btn) { btn.textContent = '⏸ Pause'; btn.style.background = 'var(--accent)'; }
+    timerInterval = setInterval(function() {
+      timerSeconds--;
+      updateTimerDisplay();
+      if (timerSeconds <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        if (btn) { btn.textContent = '▶ Start'; btn.style.background = 'var(--sage)'; }
+        var disp = document.getElementById('timer-display');
+        if (disp) disp.textContent = '00:00';
+        alert('⏰ Session complete! Time for a break. Great work.');
+      }
+    }, 1000);
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 25 * 60;
+  updateTimerDisplay();
+  var btn = document.getElementById('timer-start');
+  if (btn) { btn.textContent = '▶ Start'; btn.style.background = 'var(--sage)'; }
+}
+
+// ── DAYS GONE ──
+var daysGoneMsgs = {
+  'A day or two': '→ Two days? Barely a blip. You\'re already back. Open the Daily page and pick one thing.',
+  'About a week': '→ A week away is normal. Life gets busy. No catching up needed — just today. Go to Top 3 and pick one task.',
+  'A few weeks': '→ A few weeks means you probably needed a real break. Your brain needed it. Now it\'s ready. Start tiny — 10 minutes is enough.',
+  'Honestly\u2026 months': '→ Months away means something was genuinely hard. That\'s valid. Today you just need to show up once. That\'s the entire goal.',
+  'I\'ve never really started': '→ Then today is Day 1 — and that\'s exciting. No catching up, no history. Just today. Start with the Brain Dump page.'
+};
+
+// ── EVENT DELEGATION — single listener handles ALL clicks ──
+document.addEventListener('click', function(e) {
+  var t = e.target;
+
+  // Tab nav & section buttons
+  var sec = t.getAttribute('data-section');
+  if (sec) { showSection(sec); return; }
+
+  // Check boxes
+  if (t.getAttribute('data-check') === 'true' || t.classList.contains('check-box')) {
+    toggleCheck(t); return;
+  }
+
+  // Chips
+  if (t.getAttribute('data-chip') === 'true' || t.classList.contains('reset-chip')) {
+    toggleChip(t); return;
+  }
+
+  // Scale buttons
+  var scaleId = t.getAttribute('data-scale');
+  if (scaleId) {
+    document.querySelectorAll('[data-scale="' + scaleId + '"]').forEach(function(b) { b.classList.remove('selected'); });
+    t.classList.add('selected'); return;
+  }
+
+  // Mood / emoji buttons
+  var moodId = t.getAttribute('data-mood');
+  if (moodId) {
+    document.querySelectorAll('[data-mood="' + moodId + '"]').forEach(function(b) { b.classList.remove('selected'); });
+    t.classList.add('selected'); return;
+  }
+
+  // Habit dots
+  if (t.getAttribute('data-habitdot') === 'true' || t.classList.contains('habit-dot')) {
+    t.classList.toggle('done');
+    t.textContent = t.classList.contains('done') ? '✓' : '';
+    return;
+  }
+
+  // Calendar cells
+  if (t.getAttribute('data-calcell') === 'true' || t.classList.contains('cal-cell') || t.classList.contains('cal-num')) {
+    var cell = t.classList.contains('cal-cell') ? t : t.closest('.cal-cell');
+    if (cell) {
+      var dot = cell.querySelector('.cal-dot');
+      if (dot) { dot.remove(); } else {
+        var nd = document.createElement('div'); nd.className = 'cal-dot'; cell.appendChild(nd);
+      }
+    }
+    return;
+  }
+
+  // Days gone buttons
+  if (t.getAttribute('data-daysgone') === 'true' || t.classList.contains('days-gone-btn')) {
+    document.querySelectorAll('.days-gone-btn').forEach(function(b) { b.classList.remove('active'); });
+    t.classList.add('active');
+    var msg = document.getElementById('days-gone-msg');
+    if (msg) msg.textContent = daysGoneMsgs[t.textContent] || '→ Whatever you picked: you\'re back now. That\'s the only thing that matters.';
+    return;
+  }
+
+  // Dopamine add buttons
+  var dopaList = t.getAttribute('data-dopalist');
+  if (dopaList) { addDopamineItem(dopaList); return; }
+
+  // Named buttons
+  if (t.id === 'add-task-btn') { addTask(); return; }
+  if (t.id === 'add-monthly-goal-btn') { addCheckItem('monthly-goals', 'Monthly goal...'); return; }
+  if (t.id === 'add-deep-task-btn') { addCheckItem('deep-work-tasks', 'Deep work task...'); return; }
+  if (t.id === 'add-breakdown-btn') { addBreakdownStep(); return; }
+  if (t.id === 'timer-start') { startTimer(); return; }
+  if (t.id === 'timer-reset-btn') { resetTimer(); return; }
+  if (t.id === 'print-btn') { window.print(); return; }
+});
+
+// ── STORAGE (safe fallback) ──
+var store = (function() {
+  try {
+    localStorage.setItem('_t','1'); localStorage.removeItem('_t');
+    return {
+      save: function(d) { try { localStorage.setItem('adhdPlanner', JSON.stringify(d)); } catch(e) {} },
+      load: function() { try { return JSON.parse(localStorage.getItem('adhdPlanner')) || {}; } catch(e) { return {}; } }
+    };
+  } catch(e) {
+    var mem = {};
+    return { save: function(d) { mem = d; }, load: function() { return mem; } };
+  }
+})();
+
+document.addEventListener('input', function() {
+  var inputs = document.querySelectorAll('input[type=text], textarea');
+  var data = {};
+  inputs.forEach(function(inp, i) { data[i] = inp.value; });
+  store.save(data);
+});
+
+(function() {
+  var saved = store.load();
+  if (saved && Object.keys(saved).length) {
+    var inputs = document.querySelectorAll('input[type=text], textarea');
+    inputs.forEach(function(inp, i) { if (saved[i]) inp.value = saved[i]; });
+  }
+})();
+
+// ── ADD TO HOME SCREEN ──
+(function() {
+  var banner = document.getElementById('a2hs-banner');
+  var overlay = document.getElementById('a2hs-overlay');
+  var dismissBtn = document.getElementById('a2hs-dismiss-btn');
+  var deferredPrompt = null;
+
+  function hideBanner() {
+    if (banner) banner.style.display = 'none';
+    try { localStorage.setItem('a2hsDismissed', '1'); } catch(e) {}
+  }
+
+  // Don't show if already dismissed or already installed
+  try { if (localStorage.getItem('a2hsDismissed')) return; } catch(e) {}
+
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isAndroid = /android/i.test(navigator.userAgent);
+  var isMobile = isIOS || isAndroid;
+  var isInStandaloneMode = window.navigator.standalone === true;
+
+  // Desktop — don't show anything
+  if (!isMobile) return;
+
+  if (dismissBtn) dismissBtn.addEventListener('click', hideBanner);
+  if (overlay) overlay.addEventListener('click', hideBanner);
+
+  // iOS Safari — show the visual guide
+  if (isIOS && !isInStandaloneMode) {
+    setTimeout(function() {
+      if (banner) banner.style.display = 'block';
+    }, 3000);
+    return;
+  }
+
+  // Android / Chrome — use native install prompt
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Swap to a simple install button for Android
+    var card = banner.querySelector('div[style*="border-radius:20px"]');
+    if (card) {
+      card.innerHTML = '<div style="text-align:center;padding:10px 0 20px;">' +
+        '<div style="font-size:40px;margin-bottom:8px;">🧠</div>' +
+        '<div style="font-family:sans-serif;font-size:20px;font-weight:700;color:#3A3530;margin-bottom:6px;">Install ADHD Planner</div>' +
+        '<div style="font-size:14px;color:#7A7168;margin-bottom:20px;">Works offline. Lives on your home screen.</div>' +
+        '<button id="a2hs-install-btn" style="width:100%;background:#7A9E7E;color:white;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:10px;">⬇ Install App</button>' +
+        '<button id="a2hs-dismiss-btn2" style="width:100%;background:none;border:2px solid #D8CFC0;border-radius:12px;padding:12px;font-size:14px;color:#7A7168;cursor:pointer;">Not now</button>' +
+        '</div>';
+      // hide the arrow overlay for Android
+      var arrow = banner.querySelector('div[style*="bottom:70px"]');
+      if (arrow) arrow.style.display = 'none';
+      if (overlay) overlay.style.background = 'rgba(0,0,0,0.5)';
+      document.getElementById('a2hs-install-btn').addEventListener('click', function() {
+        hideBanner();
+        if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
+      });
+      document.getElementById('a2hs-dismiss-btn2').addEventListener('click', hideBanner);
+      if (overlay) overlay.addEventListener('click', hideBanner);
+    }
+    setTimeout(function() { if (banner) banner.style.display = 'block'; }, 3000);
+  });
+
+  window.addEventListener('appinstalled', hideBanner);
+})();
+
+})();
+</script>
+</body>
+</html>
